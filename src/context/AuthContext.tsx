@@ -5,23 +5,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  type UserCredential
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-
-export interface IUser {
-  uid: string;
-  email: string;
-  displayName: string;
-  photoURL: string;
-}
-
-interface AuthContextType {
-  user: IUser | null;
-  signUp: (email: string, password: string, name: string) => Promise<UserCredential>;
-  signIn: (email: string, password: string) => Promise<UserCredential>;
-  logout: () => Promise<void>;
-}
+import { AuthContextType, IUser } from '@/interfaces/auth';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
