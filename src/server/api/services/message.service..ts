@@ -1,6 +1,6 @@
 import { serverTimestamp } from 'firebase/firestore';
 
-import { db } from '../db';
+import { db } from '../../db';
 import { MessageRepository } from '../repositories/message.respository';
 import { IMessage } from '@/interfaces/message.interface';
 

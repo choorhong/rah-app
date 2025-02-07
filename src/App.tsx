@@ -7,7 +7,7 @@ import { Card, CardContent } from './components/ui/card'
 import { LoadingButton } from './components/ui/loading-button'
 import { validationReducer, initialState, type ValidationStateKey, type ValidationStateType } from './reducers/validationReducer';
 import { useNavigate } from 'react-router-dom';
-import { authService } from "@/server/api/auth";
+import { authService } from "@/server/api/services/auth.service";
 
 import { AuthError, AuthErrorCodes } from 'firebase/auth';
 import { useAuth } from './context/AuthContext'

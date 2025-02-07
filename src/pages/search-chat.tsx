@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { IUser } from "@/interfaces/auth.interface";
-import { searchService } from "@/server/api/search";
+import { searchService } from "@/server/api/services/search.service";
 
 const debounce = <T extends (...args: any[]) => void>(cb: T, wait: number = 500): ((...args: Parameters<T>) => void) => {
   let timeout: ReturnType<typeof setTimeout>;

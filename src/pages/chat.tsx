@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 
 import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
-import { messageService } from "@/server/api/message";
+import { messageService } from "@/server/api/services/message.service.";
 
 
 interface Message {

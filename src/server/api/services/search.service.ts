@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { db } from '../../db';
 import { IUser } from '@/interfaces/auth.interface';
 import { UserRepository } from '../repositories/user.repository';
 

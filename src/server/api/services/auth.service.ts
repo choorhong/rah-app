@@ -5,7 +5,7 @@ import {
   UserCredential,
   User
 } from 'firebase/auth';
-import { auth, db } from '../db';
+import { auth, db } from '../../db';
 
 import { Auth } from 'firebase/auth';
 import { UserRepository } from '../repositories/user.repository';
