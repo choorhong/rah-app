@@ -2,10 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useRef, useEffect } from "react";
 
-import { collection, serverTimestamp, query, onSnapshot, orderBy, writeBatch, doc } from 'firebase/firestore';
-import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useParams } from 'react-router-dom';
+import { messageService } from "@/server/api/services/message.service.";
 
 
 interface Message {
@@ -32,56 +31,17 @@ const ChatPage = () => {
   useEffect(() => {
     if (!user?.uid || !recipientId) return;
 
-    const chatPath = `messages/${user.uid}/chats/${recipientId}/messages`;
-    const messagesRef = collection(db, chatPath);
-    const q = query(
-      messagesRef,
-      orderBy('createdAt', 'asc')
+    const unsubscribe = messageService.subscribeToMessages(
+      user.uid,
+      recipientId,
+      (newMessages) => {
+        setMessages(newMessages);
+        requestAnimationFrame(scrollToBottom);
+      }
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const newMessages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Message[];
-
-      setMessages(newMessages);
-      requestAnimationFrame(scrollToBottom);
-    });
 
     return () => unsubscribe();
   }, [user?.uid, recipientId]);
-
-  const sendMessage = async (text: string) => {
-
-    const batch = writeBatch(db);
-
-    const messageData = {
-      senderId: user!.uid,
-      recipientId,
-      text: text.trim(),
-      createdAt: serverTimestamp(),
-    };
-
-    try {
-      // Add to sender's messages
-      const senderPath = `messages/${user!.uid}/chats/${recipientId}/messages`;
-      const senderRef = doc(collection(db, senderPath));
-      batch.set(senderRef, messageData);
-
-      // Add to recipient's messages
-      const recipientPath = `messages/${recipientId}/chats/${user!.uid}/messages`;
-      const recipientRef = doc(collection(db, recipientPath));
-      batch.set(recipientRef, messageData);
-
-      // Commit both operations atomically
-      await batch.commit();
-      return { id: senderRef.id, ...messageData };
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw new Error('Failed to send message');
-    }
-  };
 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -90,26 +50,8 @@ const ChatPage = () => {
     if (!input.trim() || !user?.uid || !recipientId) return;
 
     try {
-      await sendMessage(input.trim());
+      await messageService.sendMessage(user.uid, recipientId, input.trim());
       inputRef.current!.value = "";
-
-      // console.log('result', result);
-
-      // setMessages((prevMsg) => {
-      //   const newMessage: Message = {
-      //     ...result,
-      //     recipientId: recipientId as string
-      //   };
-      //   const newMessages = [
-      //     ...prevMsg,
-      //     newMessage,
-      //   ];
-
-      //   // Scroll after state update is complete
-      //   requestAnimationFrame(scrollToBottom);
-
-      //   return newMessages;
-      // });
     } catch (error) {
       console.error(error);
     }

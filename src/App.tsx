@@ -7,9 +7,10 @@ import { Card, CardContent } from './components/ui/card'
 import { LoadingButton } from './components/ui/loading-button'
 import { validationReducer, initialState, type ValidationStateKey, type ValidationStateType } from './reducers/validationReducer';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { authService } from "@/server/api/services/auth.service";
 
 import { AuthError, AuthErrorCodes } from 'firebase/auth';
+import { useAuth } from './context/AuthContext'
 
 // Add error messages map
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -20,10 +21,11 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 const App = () => {
-  const { signUp, signIn } = useAuth();
+  const { handleSetUser } = useAuth();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(validationReducer, initialState);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -62,7 +64,7 @@ const App = () => {
     if (nameError || emailError || passwordError) return
 
     try {
-      await signUp(email!, password!, name!);
+      await authService.signup(email!, password!, name!);
     } catch (error) {
       const authError = error as AuthError;
       const errorMessage = AUTH_ERROR_MESSAGES[authError.code] || 'An error occurred';
@@ -75,6 +77,7 @@ const App = () => {
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthError(null);
+    setLoading(true);
 
     const email = emailRef.current?.value;
     const password = passwordRef.current?.value;
@@ -88,9 +91,19 @@ const App = () => {
     if (nameError || emailError || passwordError) return
 
     try {
-      await signIn(email!, password!);
+      const result = await authService.login(email!, password!);
+      handleSetUser(
+        {
+          uid: result.user.uid,
+          email: result.user.email || '',
+          displayName: name || result.user.displayName || '',
+          photoURL: result.user.photoURL || ''
+        }
+      );
+
       navigate('/search-chat');
     } catch (error) {
+      setLoading(false);
       const authError = error as AuthError;
       const errorMessage = AUTH_ERROR_MESSAGES[authError.code] || 'An error occurred';
       setAuthError(errorMessage);
@@ -120,8 +133,8 @@ const App = () => {
               {state.password && <p className="text-red-500">{state.password}</p>}
             </div>
             <div className="flex justify-between space-x-4">
-              <LoadingButton type='submit' className="w-full">Login</LoadingButton>
-              <Button type="button" variant="outline" className="w-full" onClick={handleRegister}>Register</Button>
+              <LoadingButton type='submit' className="w-full" loading={loading}>Login</LoadingButton>
+              <Button type="button" variant="outline" className="w-full" onClick={handleRegister} disabled={loading}>Register</Button>
             </div>
           </form>
 
