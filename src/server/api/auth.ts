@@ -5,11 +5,10 @@ import {
   UserCredential,
   User
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../db';
 
 import { Auth } from 'firebase/auth';
-import { Firestore } from 'firebase/firestore';
+import { UserRepository } from '../repositories/user.repository';
 
 interface IAuthService {
   signup(email: string, password: string, name: string): Promise<UserCredential>;
@@ -22,12 +21,12 @@ class AuthService implements IAuthService {
 
   private constructor(
     private auth: Auth,
-    private db: Firestore
+    private userRepository: UserRepository
   ) { }
 
-  public static initialize(auth: Auth, db: Firestore): void {
+  public static initialize(auth: Auth, userRepository: UserRepository): void {
     if (!AuthService.instance) {
-      AuthService.instance = new AuthService(auth, db);
+      AuthService.instance = new AuthService(auth, userRepository);
     }
   }
 
@@ -40,7 +39,7 @@ class AuthService implements IAuthService {
 
   public async signup(email: string, password: string, name: string): Promise<UserCredential> {
     const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-    await this.createUserDocument(userCredential.user, name);
+    await this.createUserDocument(userCredential.user, email, name);
     return userCredential;
   }
 
@@ -52,10 +51,10 @@ class AuthService implements IAuthService {
     return signOut(this.auth);
   }
 
-  private async createUserDocument(user: User, name: string): Promise<void> {
-    await setDoc(doc(this.db, 'users', user.uid), {
+  private async createUserDocument(user: User, email: string, name: string): Promise<void> {
+    await this.userRepository.create({
       uid: user.uid,
-      email: user.email,
+      email: email,
       displayName: name,
       photoURL: user.photoURL
     });
@@ -63,5 +62,6 @@ class AuthService implements IAuthService {
 }
 
 // Initialize service
-AuthService.initialize(auth, db);
+const userRepository = new UserRepository(db);
+AuthService.initialize(auth, userRepository);
 export const authService = AuthService.getInstance();
