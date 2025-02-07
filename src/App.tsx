@@ -65,7 +65,6 @@ const App = () => {
 
     try {
       await authService.signup(email!, password!, name!);
-
     } catch (error) {
       const authError = error as AuthError;
       const errorMessage = AUTH_ERROR_MESSAGES[authError.code] || 'An error occurred';

@@ -1,19 +1,19 @@
-import { collection, query, where, getDocs, Firestore } from 'firebase/firestore';
 import { db } from '../db';
 import { IUser } from '@/interfaces/auth';
+import { UserRepository } from '../repositories/user.repository';
 
 export interface ISearchService {
-  searchUsers(term: string): Promise<IUser[]>;
+  searchUsers(term: string): Promise<IUser[] | null>;
 }
 
 class SearchService implements ISearchService {
   private static instance: SearchService;
 
-  private constructor(private database: Firestore) { }
+  private constructor(private userRepository: UserRepository) { }
 
-  public static initialize(database: Firestore): void {
+  public static initialize(userRepository: UserRepository): void {
     if (!SearchService.instance) {
-      SearchService.instance = new SearchService(database);
+      SearchService.instance = new SearchService(userRepository);
     }
   }
 
@@ -24,45 +24,12 @@ class SearchService implements ISearchService {
     return SearchService.instance;
   }
 
-  public async searchUsers(searchTerm: string): Promise<IUser[]> {
-
-    const usersRef = collection(this.database, 'users');
-
-    // Single field search to avoid composite index requirement
-    const emailQuery = query(
-      usersRef,
-      where('email', '>=', searchTerm.toLowerCase()),
-      where('email', '<=', searchTerm.toLowerCase() + '\uf8ff')
-    );
-
-
-    const nameQuery = query(
-      usersRef,
-      where('displayName', '>=', searchTerm),
-      where('displayName', '<=', searchTerm + '\uf8ff')
-    );
-
-    const [emailSnapshot, nameSnapshot] = await Promise.all([
-      getDocs(emailQuery),
-      getDocs(nameQuery)
-    ]);
-
-
-    // Combine and deduplicate results
-    const results = new Map();
-
-    emailSnapshot.forEach((doc) => {
-      results.set(doc.id, { id: doc.id, ...doc.data() });
-    });
-
-    nameSnapshot.forEach((doc) => {
-      results.set(doc.id, { id: doc.id, ...doc.data() });
-    });
-
-    return Array.from(results.values());
+  public async searchUsers(searchTerm: string): Promise<IUser[] | null> {
+    return this.userRepository.findByEmailOrName(searchTerm);
   }
 }
 
 // Initialize service
-SearchService.initialize(db);
+const userRepository = new UserRepository(db);
+SearchService.initialize(userRepository);
 export const searchService = SearchService.getInstance();
