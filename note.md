@@ -34,6 +34,7 @@ This application is built with [Vite](https://vite.dev/) and [React v19](https:/
 - Althought the lack of backend server but the Domain-Driven Design pattern was observed to ensure a clear separation of concerns.
 - In hindsight, unit testing should have been included for better maintainability and reliability.
 - Although a Docker setup was omitted, the application was swiftly deployed to Netlify for accessibility.
+- **To test, you may search `sample` to start chatting with `sample@google.com`**
 
 
 

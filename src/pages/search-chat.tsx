@@ -49,7 +49,7 @@ const SearchChatPage = () => {
       {/* Command Dialog */}
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          <CommandInput placeholder="Type a command or search..." onValueChange={handleValueChange} />
+          <CommandInput placeholder="Search by name or email (CASE SENSITIVE)" onValueChange={handleValueChange} />
           <CommandList className="scrollbar-none">
             <CommandEmpty>No results found.</CommandEmpty>
             {
