@@ -2,7 +2,7 @@ import { IMessage } from "@/interfaces/message.interface";
 import { FirebaseRepository } from "./firebase.repository";
 import { collection, query, orderBy, onSnapshot, writeBatch, doc, Firestore, deleteDoc, getDocs } from 'firebase/firestore';
 
-export class MessageRepository extends FirebaseRepository<any> {
+export class MessageRepository extends FirebaseRepository {
   constructor(db: Firestore) {
     super(db, 'messages');
   }

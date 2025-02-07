@@ -2,7 +2,7 @@ import { IUser } from "@/interfaces/auth.interface";
 import { FirebaseRepository } from "./firebase.repository";
 import { Firestore, doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 
-export class UserRepository extends FirebaseRepository<IUser> {
+export class UserRepository extends FirebaseRepository {
   constructor(db: Firestore) {
     super(db, 'users');
   }
