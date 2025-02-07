@@ -24,7 +24,8 @@ const SearchChatPage = () => {
 
   const searchUsers = async (searchTerm: string) => {
     if (!searchTerm) return [];
-    return searchService.searchUsers(searchTerm);
+    const results = await searchService.searchUsers(searchTerm);
+    return results ?? [];
   };
 
   const handleValueChange = debounce(async (value: string) => {
