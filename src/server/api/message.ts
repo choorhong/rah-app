@@ -1,14 +1,9 @@
-import { collection, serverTimestamp, query, orderBy, onSnapshot, writeBatch, doc, Firestore, deleteDoc, getDocs } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 
 import { db } from '../db';
+import { MessageRepository } from '../repositories/message.respository';
+import { IMessage } from '@/interfaces/message.interface';
 
-export interface IMessage {
-  id: string;
-  senderId: string;
-  recipientId: string;
-  text: string;
-  createdAt: any;
-}
 
 export interface IMessageService {
   sendMessage(senderId: string, recipientId: string, text: string): Promise<IMessage>;
@@ -20,11 +15,11 @@ class MessageService implements IMessageService {
   private static instance: MessageService;
   private subscriptions: Map<string, () => void> = new Map();
 
-  private constructor(private database: Firestore) { }
+  private constructor(private messageRepository: MessageRepository) { }
 
-  public static initialize(database: Firestore): void {
+  public static initialize(messageRepository: MessageRepository): void {
     if (!MessageService.instance) {
-      MessageService.instance = new MessageService(database);
+      MessageService.instance = new MessageService(messageRepository);
     }
   }
 
@@ -40,25 +35,17 @@ class MessageService implements IMessageService {
     recipientId: string,
     callback: (messages: IMessage[]) => void
   ): () => void {
-    const chatPath = `messages/${userId}/chats/${recipientId}/messages`;
-    const messagesRef = collection(this.database, chatPath);
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as IMessage[];
-
-      callback(messages);
-    });
-
     const subscriptionKey = `${userId}-${recipientId}`;
+
+    // Call the repository's subscribeToMessages method
+    const unsubscribe = this.messageRepository.subscribeToMessages(userId, recipientId, callback);
+
+    // Store the unsubscribe function in case it needs to be called later
     this.subscriptions.set(subscriptionKey, unsubscribe);
 
     return () => {
-      unsubscribe();
-      this.subscriptions.delete(subscriptionKey);
+      unsubscribe();  // This will unsubscribe from the messages stream
+      this.subscriptions.delete(subscriptionKey);  // Clean up the subscription map
     };
   }
 
@@ -70,41 +57,20 @@ class MessageService implements IMessageService {
       createdAt: serverTimestamp()
     };
 
-    const batch = writeBatch(this.database);
-
-    // Add to sender's messages
-    const senderPath = `messages/${senderId}/chats/${recipientId}/messages`;
-    const senderRef = doc(collection(this.database, senderPath));
-    batch.set(senderRef, messageData);
-
-    // Add to recipient's messages
-    const recipientPath = `messages/${recipientId}/chats/${senderId}/messages`;
-    const recipientRef = doc(collection(this.database, recipientPath));
-    batch.set(recipientRef, messageData);
-
-    // Commit both operations atomically
-    await batch.commit();
-    return { id: senderRef.id, ...messageData };
+    return this.messageRepository.createMessage(senderId, recipientId, messageData);
   }
 
   public async getMessages(userId: string, recipientId: string): Promise<IMessage[]> {
-    const chatPath = `messages/${userId}/chats/${recipientId}/messages`;
-    const messagesRef = collection(this.database, chatPath);
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as IMessage[];
+    return this.messageRepository.getMessages(userId, recipientId);
 
   }
 
   public async deleteMessage(messageId: string): Promise<void> {
-    return await deleteDoc(doc(this.database, 'messages', messageId));
+    this.messageRepository.deleteMessage(messageId);
 
   }
 }
 
-MessageService.initialize(db);
+const msgRepository = new MessageRepository(db);
+MessageService.initialize(msgRepository);
 export const messageService = MessageService.getInstance();

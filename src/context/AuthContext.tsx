@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 
-import { AuthContextType, IUser } from '@/interfaces/auth';
+import { AuthContextType, IUser } from '@/interfaces/auth.interface';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 

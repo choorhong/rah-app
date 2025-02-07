@@ -1,4 +1,4 @@
-import { IUser } from "@/interfaces/auth";
+import { IUser } from "@/interfaces/auth.interface";
 import { FirebaseRepository } from "./firebase.repository";
 import { Firestore, doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 

@@ -3,7 +3,7 @@ import { Command, CommandDialog, CommandInput, CommandList, CommandItem, Command
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { IUser } from "@/interfaces/auth";
+import { IUser } from "@/interfaces/auth.interface";
 import { searchService } from "@/server/api/search";
 
 const debounce = <T extends (...args: any[]) => void>(cb: T, wait: number = 500): ((...args: Parameters<T>) => void) => {

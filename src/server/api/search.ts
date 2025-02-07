@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { IUser } from '@/interfaces/auth';
+import { IUser } from '@/interfaces/auth.interface';
 import { UserRepository } from '../repositories/user.repository';
 
 export interface ISearchService {
